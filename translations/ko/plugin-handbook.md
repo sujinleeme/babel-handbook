@@ -1,17 +1,17 @@
-# Babel Plugin Handbook
+# 바벨 플러그인 핸드북 (Babel Plugin Handbook)
 
-이 문서는 [Babel](https://babeljs.io) [플러그인](https://babeljs.io/docs/advanced/plugins/)을 만드는 방법을 설명합니다.
+이 문서는 [바벨(Babel)](https://babeljs.io) [플러그인](https://babeljs.io/docs/advanced/plugins/)을 만드는 방법을 설명합니다.
 
 [![cc-by-4.0](https://licensebuttons.net/l/by/4.0/80x15.png)](http://creativecommons.org/licenses/by/4.0/)
 
-이 핸드북은 다른 언어로도 볼 수 있습니다. 전체 목록은 [README](/README.md)를 참고하세요.
+이 핸드북은 전 세계 언어로 번역되고 있습니다. 전체 목차는 [이 곳](/README.md)에서 확인할 수 있습니다.
 
 # 목차
 
   * [소개](#toc-introduction)
   * [기본](#toc-basics) 
       * [추상 구문 트리 (ASTs)](#toc-asts)
-      * [Babel 실행 단계](#toc-stages-of-babel)
+      * [바벨 실행 단계](#toc-stages-of-babel)
       * [분석(Parse)](#toc-parse) 
           * [어휘 분석(Lexical Analysis)](#toc-lexical-analysis)
           * [구문 분석(Syntactic Analysis)](#toc-syntactic-analysis)
@@ -34,7 +34,7 @@
       * [Converters](#toc-converters)
       * [babel-generator](#toc-babel-generator)
       * [babel-template](#toc-babel-template)
-  * [첫 Babel 플러그인 작성](#toc-writing-your-first-babel-plugin)
+  * [첫 바벨 플러그인 작성](#toc-writing-your-first-babel-plugin)
   * [변환 작업](#toc-transformation-operations) 
       * [방문하기(Visiting)](#toc-visiting)
       * [서브-노드의 경로 얻기](#toc-get-the-path-of-a-sub-node)
@@ -72,25 +72,25 @@
 
 # <a id="toc-introduction"></a>소개
 
-Babel은 일반적으로 다목적 자바스크립트 컴파일러입니다. 더 나아가 많은 형태의 정적 분석 (Static analysis) 에 사용되는 모듈들의 모음(collection) 이기도 합니다.
+바벨(Babel)은 다목적 자바스크립트 컴파일러이자 정적 분석(Static analysis)에 사용되는 모듈의 집합(collection)이라고 할 수 있습니다.
 
-> 정적 분석(Static analysis) 이란 코드를 실행하지 않고 분석하는 작업 입니다. 코드를 실행하는 동안 분석하는 것은 동적 분석(dynamic analysis) 으로 알려져 있습니다. 정적 분석의 목적은 매우 다양합니다. 구문 검사 (linting), 컴파일링, 코드 하이라이팅, 코드 변환, 최적화, 압축(minification) 등 매우 많은 용도로 사용될 수 있습니다.
+> 정적 분석(Static analysis)은 코드를 실행하지 않고 분석하는 것이며, 동적 분석(dynamic analysis)은 코드를 실행하는 동안 분석하는 것입니다. 정적 분석의 목적은 매우 다양합니다. 구문 검사, 컴파일링, 코드 하이라이팅, 코드 변환, 최적화, 압축 등 매우 많은 경우에 사용됩니다.
 
-생산성을 향상시켜주고 더 좋은 프로그램을 작성하게 해주는 많은 다양한 형태의 도구들을 Babel 을 사용하여 만들 수 있습니다.
+바벨을 사용해 생산성 향상과 더 나은 프로그램 작성을 위한 다양한 도구를 제작할 수 있습니다.
 
-> ***향후 업데이트에 대한 내용은 Twitter의 [@thejameskyle](https://twitter.com/thejameskyle)를 팔로우하세요.***
+> ***트위터 계정 [@thejameskyle](https://twitter.com/thejameskyle)에서 향후 업데이트 소식을 팔로우하세요.***
 
 * * *
 
 # <a id="toc-basics"></a>기본
 
-Babel은 JavaScript 컴파일러입니다. 정확히는 source-to-source 컴파일러이며 "트랜스파일러(transpiler)" 라고 불립니다. 즉, Babel에 자바스크립트 코드를 넘겨주면 Babel에서 코드를 수정하고 새로운 코드를 생성하여 반환해주게 됩니다.
+바벨은 자바스크립트 컴파일러입니다. 정확히 source-to-source 컴파일러로 "트랜스파일러(transpiler)" 라고 불립니다. 즉, 바벨에 자바스크립트 코드를 넘겨주면 바벨에서 코드를 수정하고 새로운 코드를 생성하여 반환해줍니다.
 
 ## <a id="toc-asts"></a>추상 구문 트리 (ASTs)
 
-각 과정들은 [추상 구문 트리(AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree)를 생성하거나 이것을 다루게됩니다.
+모든 과정마다 [추상 구문 트리(AST, abstract syntax tree)](https://en.wikipedia.org/wiki/Abstract_syntax_tree)를 생성하거나 이를 다룹니다.
 
-> Babel은 [ESTree](https://github.com/estree/estree)에서 수정된 AST를 사용하며, 핵심 스팩은 [여기](https://github.com/babel/babylon/blob/master/ast/spec.md)에 있습니다.
+> 바벨은 [ESTree](https://github.com/estree/estree)에서 수정된 AST를 사용하며, 핵심 스펙은 [이 곳](https://github.com/babel/babylon/blob/master/ast/spec.md)에 확인할 수 있습니다.
 
 ```js
 function square(n) {
@@ -98,9 +98,9 @@ function square(n) {
 }
 ```
 
-> AST 노드(AST nodes) 들에 더 알고 싶으면 [AST 탐색기](http://astexplorer.net/)를 확인해보세요. [이 링크](http://astexplorer.net/#/Z1exs6BWMq) 는 위 코드를 붙여넣기한 예제입니다.
+> AST 노드(AST nodes)에 더 알고 싶으면 [AST 탐색기(AST Explorer)](http://astexplorer.net/)를 사용해보세요.  [위 예제 코드](http://astexplorer.net/#/Z1exs6BWMq)를 AST 탐색기에서 확인해보세요.
 
-위의 코드는 이런 트리로 나타낼 수 있습니다:
+아마도 아래와 같은 트리가 보일 것입니다.
 
 ```md
 - FunctionDeclaration:
@@ -125,7 +125,7 @@ function square(n) {
                   - name: n
 ```
 
-또는 이런 자바스크립트 객체로 나타낼 수도 있습니다.
+그리고 아래와 같은 자바스크립트 객체도 보일 것입니다.
 
 ```js
 {
@@ -159,7 +159,7 @@ function square(n) {
 }
 ```
 
-AST 의 각 레벨들이 유사한 구조를 가지고 있다는것을 알 수 있습니다.
+여러분은 아마도 AST 각 레벨의 구조가 매우 유사함을 알 수 있을 것입니다.
 
 ```js
 {
@@ -186,11 +186,11 @@ AST 의 각 레벨들이 유사한 구조를 가지고 있다는것을 알 수 �
 }
 ```
 
-> 주의: 간단하게 보기 위해 몇개의 속성은 제거하였음.
+> **참고** 이해를 돕기 위해 일부 속성을 제거했습니다.
 
-이것들을 각각 **노드(Node)** 라고 합니다. AST 는 단일 노드 또는 수백개, 수천개의 노드로 이루어 질수 있습니다. 이 노드들이 모여 프로그램의 구문(syntax) 을 설명 할 수 있는데 이것은 정적 분석에 사용될 수 있습니다.
+이들은 다른 말로 **노드(Node)**라고 불립니다. AST는 단일 노드 또는 수백, 수천 개의 노드로 이루어집니다. 이 노드들이 모여 프로그램 구문(syntax)을 이루게 되고 이 구문이 바로 정적 분석에 사용됩니다.
 
-모든 노드는 이런 인터페이스를 가지고 있습니다:
+모든 노드는 아래와 같은 인터페이스를 가집니다.
 
 ```typescript
 interface Node {
@@ -198,9 +198,9 @@ interface Node {
 }
 ```
 
-`type` 필드는 객체가 어떤 노드 타입인지 나타내는 문자열입니다. (예. `"FunctionDeclaration"`, `"Identifier"`, or `"BinaryExpression"`). 각 노드 type 은 이 특정 노드 type 을 기술하는 추가 속성들의 집합을 정의합니다.
+`type` 필드는 객체 노드 타입을 나타내는 문자열입니다. (예: `"FunctionDeclaration"`, `"Identifier"`, `"BinaryExpression"`) 각 노드 타입은 특정 노드 타입을 가리키는 추가 속성(additional properties)들의 집합입니다.
 
-Babel 이 만드는 모든 노드에는 오리지널 소스코드안의 노드의 위치를 알려주는 추가 속성이 있습니다.
+바벨이 만든 노드는 모두 원 소스 코드 내 노드 위치를 알려주는 속성을 가지고 있습니다.
 
 ```js
 {
@@ -221,21 +221,21 @@ Babel 이 만드는 모든 노드에는 오리지널 소스코드안의 노드�
 }
 ```
 
-이 `start`, `end`, `loc` 속성들은 모든 단일 노드안에 있습니다.
+모든 단일 노드 안에 `start`, `end`, `loc` 속성이 있습니다.
 
 ## <a id="toc-stages-of-babel"></a>Babel 실행 단계
 
-바벨 과정의 주요 3단계는 **분석(parse)**, **변환(transform)**, **생성(generate)** 단계입니다..
+바벨 과정은 **분석(parse)**, **변환(transform)**, **생성(generate)** 3단계로 진행됩니다.
 
 ### <a id="toc-parse"></a>분석(Parse)
 
-**분석** 단계에서는, 코드는 취해 AST를 만들어냅니다. 바벨의 분석단계는 [**어휘 분석(Lexical Analysis)**](https://en.wikipedia.org/wiki/Lexical_analysis) 과 [**구문 분석(Syntactic Analysis)**](https://en.wikipedia.org/wiki/Parsing) 두 가지 단계가 있습니다..
+**분석** 단계에서 코드를 취해 AST를 만듭니다. 분석 단계는 [**어휘 분석(Lexical Analysis)**](https://en.wikipedia.org/wiki/Lexical_analysis) 과 [**구문 분석(Syntactic Analysis)**](https://en.wikipedia.org/wiki/Parsing) 두 가지 단계로 구분됩니다.
 
 #### <a id="toc-lexical-analysis"></a>어휘 분석(Lexical Analysis)
 
-어휘 분석 과정은 코드 문자열을 취해 **토큰(tokens)**들의 스트림(stream) 으로 바꿀 것 입니다..
+어휘 분석 과정에서 코드 문자열을 취해 여러 **토큰(tokens, 단어)**들을 가지고 단일 스트림(stream)으로 만들어냅니다.
 
-토큰들을 언어 구문 조각의 플랫한 배열이라고 생각해도됩니다.
+이 토큰은 문법적 최소 단위로 각 문자열을 조각낸 배열과 같습니다.
 
 ```js
 n * n;
@@ -250,7 +250,7 @@ n * n;
 ]
 ```
 
-여기 각 `type`들은 이 토큰을 기술하는 속성들의 집합을 가지고 있습니다:
+여기 각 `type`은 토큰을 나타내는 속성들의 집합입니다.
 
 ```js
 {
@@ -271,27 +271,27 @@ n * n;
 }
 ```
 
-이것은 또한 AST 노드처럼 `start`, `end`, 그리고 `loc` 을 가지고 있습니다..
+또한 AST 노드와 마찬가지로 `start`, `end`, `loc` 속성을 가집니다.
 
 #### <a id="toc-syntactic-analysis"></a>구문 분석(Syntactic Analysis)
 
-구문 분석 과정에서는 토큰들의 스트림을 취해 AST 표현으로 바꿀 것 입니다. 이 과정에서는 토큰들 안에 있는 정보를 사용해서, 토큰들을 코드의 구조를 나타내는 AST로 재 구성하여 다루기 쉽게 만듭니다.
+구문 분석 과정에서는 스트림을 취해 AST 표현으로 바꿔줍니다. 이 과정에서 토큰의 정보를 사용해 토큰의 코드 구조를 나타내는 AST로 재구성합니다.
 
 ### <a id="toc-transform"></a>변환(Transform)
 
-[변환](https://en.wikipedia.org/wiki/Program_transformation) 단계에서는 추상 구문 트리(AST) 를 받아 그 속을 탐색해 나가며 노드들을 추가, 업데이트, 제거 합니다. Babel 이나 어떤 컴파일러에게라도 이 과정은 단연코 가장 복잡한 부분입니다. 이 과정에서 플러그인이 수행되므로 이 핸드북에서 가장 많이 다뤄질 것입니다. 그래서 지금 당장은 너무 깊게 들어가지 않겠습니다.
+[변환](https://en.wikipedia.org/wiki/Program_transformation) 단계에서는 추상 구문 트리(AST)를 받아 그 속을 탐색해 나가며 노드들을 추가, 업데이트, 제거합니다. 바벨은 물론, 다른 컴파일러에서도 가장 복잡한 단계입니다. 이 과정에서 플러그인이 작동되는데, 앞으로 이  핸드북에서 가장 비중있게 다룰 것입니다. 이 정도로 마무리 짓겠습니다.
 
 ### <a id="toc-generate"></a>생성(Generate)
 
-[코드 생성](https://en.wikipedia.org/wiki/Code_generation_(compiler)) 단계에서는 최종 AST를 취하여 다시 소스 코드 문자열로 만드는데, [소스 맵](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/) 또한 생성합니다..
+[생성](https://en.wikipedia.org/wiki/Code_generation_(compiler)) 단계에서는 최종 AST를 취해 다시 소스 코드 문자열로 만듭니다. [소스 맵](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/)도 생성됩니다.
 
-소스 코드 생성은 매우 간단합니다: AST를 깊이 우선 탐색법으로 탐색하며 변환된 코드를 나타내는 문자열을 만듭니다.
+코드 생성 과정은 매우 간단합니다. AST를 깊이 우선 탐색법(AST depth-first)으로 탐색하며 변환된 코드를 나타내는 문자열로 변환합니다.
 
 ## <a id="toc-traversal"></a>탐색(Traversal)
 
-AST 변환을 하고 싶을때, 재귀적으로 [트리를 탐색](https://en.wikipedia.org/wiki/Tree_traversal)해야합니다.
+AST 변환을 위해, 재귀 [트리 탐색](https://en.wikipedia.org/wiki/Tree_traversal)이 필요합니다.
 
-`FunctionDeclaration` type이 있다고 해봅시다. 이것은 몇 개의 속성들을 가지고 있습니다: `id`, `params`, 그리고 `body`. 이 각각은 중첩된 노드들을 가지고 있습니다.
+예를 들어 `FunctionDeclaration` 타입이 있는데 `id`, `params`, `body` 속성을 가지고 있고, 각 속성마다 중첩된 노드를 가지고 있다고 해봅시다.
 
 ```js
 {
@@ -325,25 +325,25 @@ AST 변환을 하고 싶을때, 재귀적으로 [트리를 탐색](https://en.wi
 }
 ```
 
-자 이제 `FunctionDeclaration` 부터 시작하고 우린 이것의 내부 속성을 알고있으니 각 속성들과 그들의 자식을 차례로 방문합니다.
+`FunctionDeclaration`부터 시작해 각 속성과 자식을 차례로 방문합니다.
 
-다음은 `Identifier` 인 `id` 입니다. `Identifier`는 자식 노드도 갖고 있지 않으므로 넘어갑시다.
+다음은 `Identifier`인 `id`입니다. `Identifier`는 자식 노드를 갖고 있지 않으므로 넘어갑니다.
 
-다음은 `params` 인데, 이것은 노드들의 배열이므로 각각을 방문합니다. 여기에서는 `Identifier`인 단일 노드뿐이므로 넘어갑시다.
+다음은 `params` 입니다. 노드 배열 내 요소를 하나씩 방문합니다. `Identifier`는 단일 노드 임으로 넘어갑니다.
 
-그러면 이제 `body`인데 노드들의 배열인 `body`를 속성으로 가지는 `BlockStatement`이므로 각각의 노드를 방문합니다.
+다음은 `body` 입니다. `body`는 노드 배열이며 타입은 `BlockStatement`이므로 각 노드를 모두 접근합니다.
 
-여기엔 오직 `argument` 속성을 가지고 있는 `ReturnStatement` 하나가 있는데, `argument` 속성으로 가면 `BinaryExpression` 이 있습니다.
+`ReturnStatement`의 `argument` 속성에는 `BinaryExpression`가 있습니다.
 
-`BinaryExpression`은 `operator`, `left`, `right` 를 가지고 있습니다. Operator 는 노드가 아닌 단순 값이라 여긴 방문하지 않고, 대신 `left` 와 `right`를 방문 해봅시다.
+`BinaryExpression`은 `operator`, `left`, `right` 속성을 가집니다. `operator`는 노드가 아닌 단순 값이라 여긴 방문하지 않고, 대신 `left` 와 `right`를 방문합니다.
 
-이런 탐색(traversal) 과정은 바벨 변환(transform) 과정 내내 일어납니다.
+이와 같은 탐색(traversal)이 바벨 변환(transform) 전 과정 내 일어납니다.
 
 ### <a id="toc-visitors"></a>방문자(Visitors)
 
-어떤 노드로 '간다'라고 말할때, 실제로 이건 노드들을 **방문**한다는 의미입니다. 이 단어를 사용하는 이유는 [**방문자(visitor)**](https://en.wikipedia.org/wiki/Visitor_pattern) 라는 개념이 있기 때문입니다..
+어떤 노드로 '간다(going)'라는 뜻은 실제로 각 노드를 **방문(visiting)**한다는 뜻입니다. **방문**이라는 용어는 [**방문자 패턴(visitor pattern)**](https://en.wikipedia.org/wiki/Visitor_pattern) 개념에서 가져온 것입니다.
 
-방문자는 여러 언어에서 AST 탐색에 사용되는 패턴입니다. 간단히 말해서 그들은 트리에서 특정 노트 타입을 다루기 위한 메소드들을 가지고 있는 객체입니다. 조금 추상적인 내용이라 예를 들어 살펴보겠습니다.
+방문자는 현존하는 많은 프로그래밍 언어에서 AST 탐색에 사용되는 패턴으로 트리에서 특정 노트 타입을 다루기 위한 메서드를 가진  객체입니다. 구체적인 예를 들어 살펴봅시다.
 
 ```js
 const MyVisitor = {
@@ -352,17 +352,17 @@ const MyVisitor = {
   }
 };
 
-// You can also create a visitor and add methods on it later
+// 나중에 방문자를 생성하고 메서드를 추가할 수 있습니다.
 let visitor = {};
 visitor.MemberExpression = function() {};
 visitor.FunctionDeclaration = function() {}
 ```
 
-> **Note:** `Identifier() { ... }` is shorthand for `Identifier: { enter() { ... } }`.
+> **참고** `Identifier() { ... }`은 `Identifier: { enter() { ... } }`를 축약한 것입니다.
 
-이것은 탐색을 하는 동안 트리에서 만나는 모든 `Identifier` 에 대해 `Identifier()` 를 호출하는 기본적인 방문자입니다.
+`Identifier()`는 방문자로 탐색을 하는 동안 트리 내 `Identifier`를 만나면 호출됩니다.
 
-자 `Identifier()` 메소드를 가지고 있는 이 코드는 각각의 `Identifier`에 대해 4번 호출될 것입니다(`square`를 포함하여).
+`Identifier()` 메서드가 있는 코드는 한 `Identifier`마다  `square`를 포함해 4번 호출될 것입니다.
 
 ```js
 function square(n) {
@@ -378,9 +378,9 @@ Called!
 Called!
 ```
 
-이들은 모두 노드에 **입장(enter)**할때 호출됩니다. 그러나 **퇴장(exit)**할때 방문자 메소드가 호출되게 하는 것도 가능합니다.
+즉 노드를 **방문할 때(enter)** 호출됩니다. 반대로 **나갈 때(exit)** 역시 방문자 메서드가 호출되게 만들 수 있습니다.
 
-이런 구조의 트리를 가지고 있다고 상상해봅시다.
+아래 구조 트리를 예를 들어봅시다.
 
 ```js
 - FunctionDeclaration
@@ -393,32 +393,32 @@ Called!
         - Identifier (right)
 ```
 
-트리의 각 가지들을 탐색하는 동안 결국 막다른 곳에 다다르는데 여기에서 다음 노드로 가기위해서는 뒤로 돌아가는 것이 필요합니다. 트리 아래로 내려가면서 각 노드에 **입장(enter)**하고, 돌아올때 각 노드를 **퇴장(exit)** 합니다.
+트리의 각 가지들을 탐색하는 동안 결국 막다른 곳에 다다르는데 여기에서 다음 노드로 가기 위해서는 뒤로 돌아가야 합니다. 트리 아래로 내려가면서 각 노드에 **들어가고(enter)**, 돌아올 때 각 노드를 **나가게 됩니다(exit).**
 
-이 과정이 어떻게 되는지 위의 트리로 한번 해봅시다.
+이제 위 구조 트리가 어떤 과정으로 각 노드를 탐색하는지 알아봅시다.
 
-  * Enter `FunctionDeclaration` 
-      * Enter `Identifier (id)`
-      * Hit dead end
-      * Exit `Identifier (id)`
-      * Enter `Identifier (params[0])`
-      * Hit dead end
-      * Exit `Identifier (params[0])`
-      * Enter `BlockStatement (body)`
-      * Enter `ReturnStatement (body)` 
-          * Enter `BinaryExpression (argument)`
-          * Enter `Identifier (left)` 
-              * Hit dead end
-          * Exit `Identifier (left)`
-          * Enter `Identifier (right)` 
-              * Hit dead end
-          * Exit `Identifier (right)`
-          * Exit `BinaryExpression (argument)`
-      * Exit `ReturnStatement (body)`
-      * Exit `BlockStatement (body)`
-  * Exit `FunctionDeclaration`
+  * `FunctionDeclaration` 입장 
+      * `Identifier (id)` 퇴장
+      * 종료되었음을 알림
+      * `Identifier (id)` 퇴장
+      * `Identifier (params[0])` 입장
+      * 종료되었음을 알림
+      * 퇴장 `Identifier (params[0])`
+      * 입장 `BlockStatement (body)`
+      * 입장 `ReturnStatement (body)` 
+          * 입장 `BinaryExpression (argument)`
+          * 입장 `Identifier (left)` 
+              * 종료되었음을 알림
+          * 퇴장 `Identifier (left)`
+          * 입장 `Identifier (right)` 
+              * 종료되었음을 알림
+          * 퇴장 `Identifier (right)`
+          * 퇴장 `BinaryExpression (argument)`
+      * 퇴장 `ReturnStatement (body)`
+      * 퇴장 `BlockStatement (body)`
+  * 퇴장 `FunctionDeclaration`
 
-이와같이 방문자를 생성할때 각 노드를 방문할 수 있는 두 번의 기회가 주어집니다.
+이와 같이 방문자를 생성할 때 각 노드를 방문할 수 있는 두 번의 기회가 주어집니다.
 
 ```js
 const MyVisitor = {
@@ -433,9 +433,9 @@ const MyVisitor = {
 };
 ```
 
-만일 필요하다면, 메소드 이름을 문자열로 `Identifier|MemberExpression`와 같이 `|`로 나눔으로써 같은 함수를 여러 방문자 노드에 적용할 수 있습니다.
+만일 필요하다면, 메소드 이름을 문자열로 `Identifier|MemberExpression`와 같이 `|`로 나누어 동일한 함수를 여러 방문자 노드마다 사용할 수 있습니다.
 
-예시 [flow-comments](https://github.com/babel/babel/blob/2b6ff53459d97218b0cf16f8a51c14a165db1fd2/packages/babel-plugin-transform-flow-comments/src/index.js#L47) 플러그인
+예시 - [flow-comments](https://github.com/babel/babel/blob/2b6ff53459d97218b0cf16f8a51c14a165db1fd2/packages/babel-plugin-transform-flow-comments/src/index.js#L47) 플러그인
 
 ```js
 const MyVisitor = {
@@ -443,11 +443,11 @@ const MyVisitor = {
 };
 ```
 
-또한 별칭(aliases)을 사용할 수도 있습니다.([babel-types](https://github.com/babel/babel/tree/master/packages/babel-types/src/definitions)에 정의된 대로).
+또한 별칭(aliases)을 사용할 수도 있습니다.
 
-예를 들어,
+**참고** [babel-types](https://github.com/babel/babel/tree/master/packages/babel-types/src/definitions)에서 확인할 수 있습니다.
 
-`Function` 은 `FunctionDeclaration`, `FunctionExpression`, `ArrowFunctionExpression`, `ObjectMethod` 그리고 `ClassMethod` 에 대한 별명입니다..
+예를 들면 `Function`을 `FunctionDeclaration`, `FunctionExpression`, `ArrowFunctionExpression`, `ObjectMethod`, `ClassMethod`의 별칭으로 만들 수 있습니다.
 
 ```js
 const MyVisitor = {
@@ -457,11 +457,11 @@ const MyVisitor = {
 
 ### <a id="toc-paths"></a>경로(Paths)
 
-추상구문트리(AST) 는 일반적으로 많은 노드들을 가지고 있는데, 어떻게 노드들이 다른 노드와 연결될 수 있을까요? 어디서든 조작하고 접근할 수 있는 하나의 거대한 변경가능한(mutable) 객체를 가질 수 있지만, **Paths** 를 사용해 단순화시킬 수도 있습니다.
+그렇다면 추상구문트리(AST)는 어떻게 많은 노드들을 다른 노드와 연결할 수 있는 것일까요? 어디서든 조작하고 접근할 수 있게 엄청 큰 변경 가능한 단일 객체(mutable object)로 만들 수 있겠지만, **Path**로 객체를 간단 명료하게 만들 수 있습니다.
 
-**Path** 는 두 노드 사이의 연결을 표현하는 객체입니다.
+**Path**는 두 노드 사이를 연결하는 객체입니다.
 
-예를들어 아래와 같은 노드와 그 자식 노드가 있다고 해봅시다:
+예를 들어 아래와 같은 노드와 자식 노드가 있다고 해봅시다.
 
 ```js
 {
@@ -474,7 +474,7 @@ const MyVisitor = {
 }
 ```
 
-그리고 자식 노드인 `Identifier`를 경로(path)로 표현하면, 다음과 같습니다:
+자식 노드인 `Identifier`의 경로는 아래와 같습니다.
 
 ```js
 {
@@ -490,7 +490,7 @@ const MyVisitor = {
 }
 ```
 
-이것은 또한 경로에 대한 추가적인 메타데이터(metadata)를 가집니다:
+또한 경로는 메타데이터(metadata)를 가집니다.
 
 ```js
 {
@@ -518,13 +518,13 @@ const MyVisitor = {
 }
 ```
 
-뿐만아니라 노드들의 추가, 업데이트, 이동, 삭제와 관련된 굉장히 많은 메소드들도 있습니다만, 나중에 알아보도록 하겠습니다.
+이외에도 노드 추가, 업데이트, 이동, 삭제와 관련된 많은 메서드가 있지만 나중에 알아보도록 하겠습니다.
 
-한마디로 Path들은 트리에서 노드의 위치에 대한 **리액티브(reactive)**한 표현이고 노드에 관련된 모든 종류의 정보입니다. 언제든지 트리를 변경하는 메소드를 호출할때마다, 이 정보는 업데이트됩니다. Babel은 당신이 노드들을 쉽고, 최대한 stateless하게 다루도록 이 모든 것을 관리합니다.
+경로는 트리에서 노드의 위치와 노드에 대한 모든 정보를 대응적으로 표현한 것입니다. 트리를 수정하는 메서드를 호출할 때마다 이 정보가 업데이트 됩니다. 바벨은 노드를 사용해 상태와 관련없이 노드들을 쉽게 다룰 수 있게 합니다.
 
-#### <a id="toc-paths-in-visitors"></a>방문자 안의 Paths (Paths in Visitors)
+#### <a id="toc-paths-in-visitors"></a>방문자 내 경로 (Paths in Visitors)
 
-`Identifier()` 메소드를 가지는 방문자가 있을때, 실제로 방문하는 것은 노드가 아닌 path 입니다. 따라서 노드를 직접 다루기 보다는 주로 그 노드의 리액티브(reactive)한 표현을 사용하여 작업할 수 있습니다.
+`Identifier()`메서드 가지는 방문자가 있을 때, 노드 대신에 경로를 방문합니다. 이렇게하면 노드 자체가 아닌 노드의 대응하는 표시(reactive representation)로서 다루는 것입니다.
 
 ```js
 const MyVisitor = {
@@ -547,9 +547,9 @@ Visiting: c
 
 ### <a id="toc-state"></a>상태(State)
 
-상태(State) 는 추상 구문 트리(AST) 변환의 적입니다. 상태는 계속해서 당신을 괴롭힐 것이며 상태에 대한 추정은 당신이 고려하지 못했던 구문(syntax)에 의해 거의 항상 틀릴 것입니다.
+상태(State)는 추상 구문 트리(AST) 변환에서 적과 같습니다. 상태는 늘 성가신 문제입니다. 생각지도 못했던 문법(syntax)이 나올 때 이를 이해하지 못하기 때문에 제대로 처리하지 못하기 때문입니다.
 
-아래의 코드를 봅시다:
+아래의 코드를 봅시다.
 
 ```js
 function square(n) {
@@ -557,7 +557,7 @@ function square(n) {
 }
 ```
 
-`n`의 이름을 `x`로 바꾸는 빠르고 간단한 방문자를 작성해봅시다.
+`n`의 이름을 `x`로 바꿔주는 방문자를 만들겠습니다.
 
 ```js
 let paramName;
@@ -577,7 +577,7 @@ const MyVisitor = {
 };
 ```
 
-위 코드는 아마 잘 동작 할테지만, 아래와 같은 경우 제대로 동작하지 않습니다:
+코드는 잘 동작하지만 아래와 같은 경우 제대로 동작하지 않습니다.
 
 ```js
 function square(n) {
@@ -586,7 +586,7 @@ function square(n) {
 n;
 ```
 
-더 좋은 방법은 재귀(recursion) 를 쓰는 것입니다. Christopher Nolan의 영화처럼 방문자안에 방문자를 넣어봅시다.
+바로 이 때 재귀(recursion)를 사용할 수 있습니다. 크리스토퍼 놀란 감독의 영화처럼 방문자 안에 또 방문자를 넣을 수 있습니다.
 
 ```js
 const updateParamNameVisitor = {
@@ -610,11 +610,11 @@ const MyVisitor = {
 path.traverse(MyVisitor);
 ```
 
-물론, 이건 부자연스러운 예제이긴 하지만 방문자에서 전역 상태(global state) 를 어떻게 제거할 수 있는지 보여줍니다.
+바람직한 예제는 아니지만 방문자에서 전역 상태(global state)를 어떻게 제거하는지 볼 수 있었을 것입니다.
 
-### <a id="toc-scopes"></a>범위(Scopes)
+### <a id="toc-scopes"></a>스코프(Scopes)
 
-다음으로 [**scope**](https://en.wikipedia.org/wiki/Scope_(computer_science)) 개념을 소개합니다. 자바스크립트는 [lexical scoping](https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scoping_vs._dynamic_scoping)을 가지고 있는데, 이것은 트리 구조이며 블록은 새로운 scope을 생성합니다.
+다음으로 [**스포크(scope, 범위)**](https://en.wikipedia.org/wiki/Scope_(computer_science))에 대해 알아봅시다. 자바스크립트 [어휘  스코프(lexical scoping)](https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scoping_vs._dynamic_scoping)는 트리 구조로 블록은 새로운 스코프를 생성합니다.
 
 ```js
 // 전역 스코프
@@ -628,7 +628,7 @@ function scopeOne() {
 }
 ```
 
-자바스크립트에서는 참조(reference)를 선언할 경우, 그게 변수든, 함수든, 클래스든, 파라미터든, import든, label이든 뭐든지 간에 현재 scope에 속하게 됩니다.
+자바스크립트에서는 참조(reference)를 선언한 변수, 함수, 클래스, 파라미터, import문, label 등 모든 것이 범위에 속하게 됩니다.
 
 ```js
 var global = "I am in the global scope";
@@ -642,11 +642,11 @@ function scopeOne() {
 }
 ```
 
-하위 scope 안의 코드에서는 상위 scope의 참조를 사용 할 수 있습니다.
+하위 범위 안의 코드에서는 상위 범위의 참조를 사용 할 수 있습니다.
 
 ```js
 function scopeOne() {
-  var one = "I am in the scope created by `scopeOne()`";
+  var one = "`scopeOne()`로 생성된 스코프";
 
   function scopeTwo() {
     one = "I am updating the reference in `scopeOne` inside `scopeTwo`";
@@ -666,7 +666,7 @@ function scopeOne() {
 }
 ```
 
-코드가 변환(transform) 이 될 때, 이 scope를 고려해야 합니다. 코드의 다른 부분이 수정되는 동안 기존 코드가 깨지지 않도록 해야 합니다.
+코드가 변환(transform)될 때, 이 scope를 고려해야 합니다. 코드의 다른 부분이 수정되는 동안 기존 코드가 깨지지 않도록 해야 합니다.
 
 우리는 새로운 변수들을 추가하고, 그 변수들이 기존의 것들과 충돌하지 않도록 할 수도 있습니다. 아니면 단순히 변수가 어디에서 참조되는지 찾을 수도 있습니다. 우리는 주어진 scope에서 이 참조들이 추적될 수 있도록 만들려고 합니다.
 
@@ -684,7 +684,7 @@ Scope는 다음과 같이 나타낼 수 있습니다:
 
 새로운 scope 생성 시 그것의 경로(path)와 부모(parent) scope를 전달함으로써 그렇게 할 수 있습니다. 그런 다음 그것은 탐색 과정 중 해당 scope의 모든 참조("bindings")들을 수집합니다.
 
-이것이 끝나면, scope 안에서 사용할 수 있는 각종 메소드들이 있게 됩니다. 이것에 대해선 나중에 알아봅시다.
+이것이 끝나면, 스코프 안에서 사용할 수 있는 각종 메소드들이 있게 됩니다. 나중에 좀더 자세히 알아봅시다.
 
 #### <a id="toc-bindings"></a>바인딩(Bindings)
 
@@ -743,7 +743,7 @@ function scopeOne() {
 
 Babel 은 사실 모듈들의 집합입니다. 이 장에서는 중요한 모듈들이 살펴보고, 그것들이 무엇을 하고, 어떻게 그것들을 사용할 것인지 설명합니다.
 
-> 주의: 이 장은 곧 준비될 예정인 상세 API 문서를 대체하지는 않습니다.
+> **참고** 이 장은 곧 준비될 예정인 상세 API 문서를 대체하지는 않습니다.
 
 ## <a id="toc-babylon"></a>[`babylon`](https://github.com/babel/babylon)
 
@@ -908,13 +908,13 @@ t.binaryExpression("*", t.identifier("a"), t.identifier("b"));
 }
 ```
 
-이것으로 소스 코드로 찍어보면 다음과 같습니다:
+이를 소스 코드로 옮기면 아래와 같습니다.
 
 ```js
 a * b
 ```
 
-빌더들은 또한 그들이 생성하는 노드들의 유효성을 검사하여 만약 부적절하다면 상세 에러를 던질 것입니다. 이것은 다음 메소드 설명에 이어집니다.
+빌더는 생성된 노드의 유효성을 검사하고 통과되지 못하면 에러를 반환합니다. 이 내용은 다음 메서드에서 계속해서 설명하겠습니다.
 
 ### <a id="toc-validators"></a>검증자(Validators)
 
@@ -2160,4 +2160,4 @@ pluginTester({
 
 * * *
 
-> ***향후 업데이트를 받아보려면 Twitter에 있는 [@thejameskyle](https://twitter.com/thejameskyle) 와 [@babeljs](https://twitter.com/babeljs) 를 팔로우하세요.***
+> ***트위터에서 [@thejameskyle](https://twitter.com/thejameskyle)와 [@babeljs](https://twitter.com/babeljs)를 팔로우해서 최신 소식을 받으세요.***
